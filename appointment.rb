@@ -1,14 +1,22 @@
 require 'date'
 
+# Edit your credentials.
 first_name = 'Lisa'.upcase
 last_name = 'Simpson'.upcase
-birth_day = sprintf("%02d", 1) # 1 => January
-birth_month = sprintf("%02d", 1) # => 1st
+birth_month = sprintf("%02d", 1) # 1 => January
+birth_day = sprintf("%02d", 1) # 1 => 1st
 birth_year = 1987
 license_number = 'F1234567'
 area_code = 415
 tel_prefix = 555
 tel_suffix = 9999
+
+# Fill in any pre-excluded DMVs, such as far away places that keep showing up.
+EXCLUDES = [ "Lancaster", "Norco", "Pomona", "Victorville" ]
+
+# You're ready to go! See README for how to run it.
+
+# Tested on vanilla Snow Leopard.
 
 class String
   def titleize
@@ -29,7 +37,6 @@ while line = STDIN.gets
     officeId = $1
     officeName = $2.titleize
     url = "https://eg.dmv.ca.gov/foa/findDriveTest.do?birthDay=#{birth_day}&birthMonth=#{birth_month}&birthYear=#{birth_year}&dlNumber=#{license_number}&firstName=#{first_name}&lastName=#{last_name}&numberItems=1&officeId=#{officeId}&requestedTask=DT&resetCheckFields=true&telArea=#{area_code}&telPrefix=#{tel_prefix}&telSuffix=#{tel_suffix}"
-#    puts url
     out = `curl -s "#{url}"`
 
     if out =~ /<p class="alert">\s+(\w+[,]\s+\w+\s+\w+,\s+\w+)/
@@ -38,17 +45,15 @@ while line = STDIN.gets
         :name => officeName,
 	:date => $1
       })
-      puts "Found #{officeName}, #{$1}.<br>"
+      puts "Found appointment at #{officeName} on #{$1}.<br>"
     else
-      # print 'x'
-      puts "\nFound nothing at #{officeName}.<br>"
+      puts "Found no appointments at #{officeName}.<br>"
     end
 
     if out =~ /(Tuesday, June 29)/ or out =~ /(Wednesday, June 30)/
-      if ! [ "Lancaster", "Norco", "Pomona", "Victorville" ].include?(officeName)
+      if ! EXCLUDES.include?(officeName)
        puts "\n<br>*** Candidate: #{officeName}: #{$1}.<br>"
        puts "***<br>\n***<br>\n"
-       puts "<script type=\"text/javascript\">document.getElementById('bottom').id = 'sottom';</script>"
       else
         print "Known bad location: #{officeName}<br>"
       end
@@ -61,9 +66,6 @@ while line = STDIN.gets
   end
 end
 
-puts '"<a href="#bottom" id="bottom">Bottom</a>'
-puts '<script>window.location = document.getElementById("bottom").href; alert("sex");</script>';
-
 puts "\n<br>Completed search.\n\n<br><br>"
 
 offices.sort! do |a,b|
@@ -71,8 +73,7 @@ offices.sort! do |a,b|
 end
 
 offices.each do |office|
-  if office[:date] =~ /July 9,/ or office[:date] =~ /July 1[0123],/
-    puts "*** Excellent!<br>"
-  end
   puts office[:name] + ': ' + office[:date] + ' [' + office[:id] + ']' + '<br>'
 end
+
+puts '</body></html>'
