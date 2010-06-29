@@ -1,0 +1,19 @@
+<option value="523">CONCORD</option>
+<option value="599">DALY CITY</option>
+<option value="598">DAVIS</option>
+<option value="615">DELANO</option>
+<option value="590">FORT BRAGG</option>
+<option value="644">FREMONT</option>
+<option value="505">FRESNO</option>
+<option value="640">LOS GATOS</option>
+<option value="586">NORCO</option>
+<option value="504">OAKLAND CLAREMONT</option>
+<option value="604">OAKLAND COLISEUM</option>
+<option value="592">PITTSBURG</option>
+<option value="631">PLEASANTON</option>
+<option value="532">POMONA</option>
+<option value="548">REDWOOD CITY</option>
+<option value="633">REEDLEY</option>
+<option value="516">SAN JOSE</option>
+<option value="593">SAN MATEO</option>
+

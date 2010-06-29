@@ -3,8 +3,8 @@ require 'date'
 # Edit your credentials.
 first_name = 'Lisa'.upcase
 last_name = 'Simpson'.upcase
-birth_month = sprintf("%02d", 2) # 1 => January
-birth_day = sprintf("%02d", 19) # 1 => 1st
+birth_month = sprintf("%02d", 1) # 1 => January
+birth_day = sprintf("%02d", 1) # 1 => 1st
 birth_year = 1987
 license_number = 'F1234567'
 area_code = 415
@@ -31,52 +31,52 @@ offices = []
 
 STDOUT.sync = true
 puts '<html>'
-puts '<head><meta http-equiv="refresh" content="1" /></head>'
+puts '<style type="text/css">body { font-family: georgia; color: #ff50a4; background-color: beige } div.office { float: left; padding: 2px }'
+puts 'div.office a.success { color: #c0a4c2 } div.office a.failure { color:red } div.office a.highlight { color: #55A6DE; } div.office a.excluded { color: grey } div.office.legend { overflow: auto; width: 100% }</style>'
+puts '</head>'
 puts '<body>'
-print "Searching for appointments...<br><br>"
+print "<b>Searching for appointments...</b><br><br>"
 
+print 'Legend:<br>'
+print '<div class="office legend"><a href="#" class="highlight">Ideal Appointment</a></div>'
+print '<div class="office legend"><a href="#" class="success">Appointment Available</a></div><br>'
+
+print '<br><br><br>Mouse over a location to see the earliest appointment date.<br>'
+
+office_index = 0
 while line = STDIN.gets
   if line =~ /value=\"(\d+)\">(([A-Z]+\s?)+)/
-    officeId = $1
-    officeName = $2.titleize
-    if EXCLUDES.include?(officeName)
-      puts "Skipping excluded office #{officeName}.<br><br>"
-      next
-    end
+    office_id = $1
+    office_name = $2.titleize
+    puts "\n<!-- name: #{office_name} -->\n"
 
-    url = "https://eg.dmv.ca.gov/foa/findDriveTest.do?birthDay=#{birth_day}&birthMonth=#{birth_month}&birthYear=#{birth_year}&dlNumber=#{license_number}&firstName=#{first_name}&lastName=#{last_name}&numberItems=1&officeId=#{officeId}&requestedTask=DT&resetCheckFields=true&telArea=#{area_code}&telPrefix=#{tel_prefix}&telSuffix=#{tel_suffix}"
-    out = `curl -s "#{url}"`
-    sleep 1
+    if ! EXCLUDES.include?(office_name)
+      url = "https://eg.dmv.ca.gov/foa/findDriveTest.do?birthDay=#{birth_day}&birthMonth=#{birth_month}&birthYear=#{birth_year}&dlNumber=#{license_number}&firstName=#{first_name}&lastName=#{last_name}&numberItems=1&officeId=#{office_id}&requestedTask=DT&resetCheckFields=true&telArea=#{area_code}&telPrefix=#{tel_prefix}&telSuffix=#{tel_suffix}"
+      out = `curl -s "#{url}"`
+      sleep 1
 
-    if out =~ /<p class="alert">\s+(\w+[,]\s+\w+\s+\w+,\s+\w+)/
-      offices.push({
-        :id => officeId,
-        :name => officeName,
-	:date => $1
-      })
-      puts "Found appointment at #{officeName} on #{$1}.<br>"
-      if $1 =~ HIGHLIGHT
-        puts "\n<br>*** Candidate: #{officeName}: #{$1}.<br>"
-        puts "***<br>\n***<br>\n"
+      if out =~ /<p class="alert">\s+(\w+[,]\s+\w+\s+\w+,\s+\w+)/
+        office_date = $1
+        offices.push({
+          :id => office_id.to_i,
+          :name => office_name,
+	  :date => office_date,
+	  :index => office_index
+        })
+        office_index = office_index + 1
+
+        office_class = 'success'
+        if office_date =~ HIGHLIGHT
+          office_class = office_class + ' highlight'
+        end
+
+      id = office_name.split(' ').first
+      puts "<div class=\"office\"><a class=\"#{office_class}\" id=\"#{id}\" name=\"#{id}\" href=\"#{url}\" title=\"#{office_date}\">#{office_name}</a></div>"
       end
-    else
-      puts "Found no appointments at #{officeName}.<br>"
     end
-
-    id = officeName.split(' ').first
-    puts "<a id=\"#{id}\" name=\"#{id}\" href=\"#{url}\">ClickIt</a><br>"
-    puts "<script>window.location.hash = '#{id}';</script>"
-    puts '<br><br>'
   end
 end
 
-puts "\n<br>Completed search.\n\n<br><br>"
+puts "\n<div class=\"office legend\"><br><br>Completed search.</div>"
 
-offices.sort! do |a,b|
-  Date.parse(a[:date],true) <=> Date.parse(b[:date],true)
-end
-
-offices.each do |office|
-  puts office[:name] + ': ' + office[:date] + ' [' + office[:id] + ']' + '<br>'
-end
 
