@@ -3,8 +3,8 @@ require 'date'
 # Edit your credentials.
 first_name = 'Lisa'.upcase
 last_name = 'Simpson'.upcase
-birth_month = sprintf("%02d", 1) # 1 => January
-birth_day = sprintf("%02d", 1) # 1 => 1st
+birth_month = sprintf("%02d", 2) # 1 => January
+birth_day = sprintf("%02d", 19) # 1 => 1st
 birth_year = 1987
 license_number = 'F1234567'
 area_code = 415
@@ -13,6 +13,9 @@ tel_suffix = 9999
 
 # Fill in any pre-excluded DMVs, such as far away places that keep showing up.
 EXCLUDES = [ "Lancaster", "Norco", "Pomona", "Victorville" ]
+
+# Highlighted date regexp
+HIGHLIGHT = /(June 29|June 30), 2010/
 
 # You're ready to go! See README for how to run it.
 
@@ -36,8 +39,14 @@ while line = STDIN.gets
   if line =~ /value=\"(\d+)\">(([A-Z]+\s?)+)/
     officeId = $1
     officeName = $2.titleize
+    if EXCLUDES.include?(officeName)
+      puts "Skipping excluded office #{officeName}.<br><br>"
+      next
+    end
+
     url = "https://eg.dmv.ca.gov/foa/findDriveTest.do?birthDay=#{birth_day}&birthMonth=#{birth_month}&birthYear=#{birth_year}&dlNumber=#{license_number}&firstName=#{first_name}&lastName=#{last_name}&numberItems=1&officeId=#{officeId}&requestedTask=DT&resetCheckFields=true&telArea=#{area_code}&telPrefix=#{tel_prefix}&telSuffix=#{tel_suffix}"
     out = `curl -s "#{url}"`
+    sleep 1
 
     if out =~ /<p class="alert">\s+(\w+[,]\s+\w+\s+\w+,\s+\w+)/
       offices.push({
@@ -46,22 +55,17 @@ while line = STDIN.gets
 	:date => $1
       })
       puts "Found appointment at #{officeName} on #{$1}.<br>"
+      if $1 =~ HIGHLIGHT
+        puts "\n<br>*** Candidate: #{officeName}: #{$1}.<br>"
+        puts "***<br>\n***<br>\n"
+      end
     else
       puts "Found no appointments at #{officeName}.<br>"
     end
 
-    if out =~ /(Tuesday, June 29)/ or out =~ /(Wednesday, June 30)/
-      if ! EXCLUDES.include?(officeName)
-       puts "\n<br>*** Candidate: #{officeName}: #{$1}.<br>"
-       puts "***<br>\n***<br>\n"
-      else
-        print "Known bad location: #{officeName}<br>"
-      end
-    end
-
     id = officeName.split(' ').first
     puts "<a id=\"#{id}\" name=\"#{id}\" href=\"#{url}\">ClickIt</a><br>"
-    puts "<script type=\"text/javascript\">window.location.hash =  document.getElementById('#{id}').getAttribute('name');</script>";
+    puts "<script>window.location.hash = '#{id}';</script>"
     puts '<br><br>'
   end
 end
@@ -76,4 +80,3 @@ offices.each do |office|
   puts office[:name] + ': ' + office[:date] + ' [' + office[:id] + ']' + '<br>'
 end
 
-puts '</body></html>'
