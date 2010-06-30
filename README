@@ -1,6 +1,6 @@
 Currently finds Drive Test appointments only.
 
-Run with 'while true; do ruby appointment.rb < input.txt > output.html ; done'
-and leave output.html open in a small browser window in the foreground.
+Run with 'ruby appointment.rb < input.txt > output.html' and
+refresh output.html in a browser window every few seconds.
 
 Edit the credentials first. You're ready to go!
