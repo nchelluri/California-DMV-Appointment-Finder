@@ -83,8 +83,8 @@ while line = STDIN.gets
     puts "\n<!-- name: #{office_name} -->\n"
 
     if ! EXCLUDES.include?(office_name)
-      url = "https://eg.dmv.ca.gov/foa/findDriveTest.do?" +
-        "birthDay=#{birth_day}&" +
+      url = "https://www.dmv.ca.gov/foa/findDriveTest.do?"
+      data = "birthDay=#{birth_day}&" +
 	"birthMonth=#{birth_month}&" +
 	"birthYear=#{birth_year}&" +
 	"dlNumber=#{license_number}&" +
@@ -96,10 +96,10 @@ while line = STDIN.gets
 	"telArea=#{area_code}&" +
 	"telPrefix=#{tel_prefix}&" +
 	"telSuffix=#{tel_suffix}"
-      out = `curl -s "#{url}"`
+      out = `curl -s "#{url}" --data "#{data}"`
       sleep 1
 
-      if out =~ /<p class="alert">\s+(\w+[,]\s+\w+\s+\w+,\s+\w+)/
+      if out =~ /<p class="alert">(\w+[,]\s+\w+\s+\w+,\s+\w+)/
         office_date = $1
         offices.push({
           :id => office_id.to_i,
